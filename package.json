@@ -1,0 +1,119 @@
+{
+    "name": "elekton",
+    "version": "0.1.0",
+    "description": "Elekton JS library to interact with all back-end components.",
+    "keywords": [
+        "elekton",
+        "typescript",
+        "ethereum",
+        "ipfs",
+        "3box",
+        "zk-snarks",
+        "anonymous",
+        "voting"
+    ],
+    "unpkg": "dist/elekton.min.js",
+    "jsdelivr": "dist/elekton.min.js",
+    "main": "dist/elekton.js",
+    "module": "dist/elekton.esm.js",
+    "types": "dist/types/index.d.ts",
+    "files": [
+        "dist/",
+        "src/",
+        "LICENSE",
+        "README.md"
+    ],
+    "author": {
+        "name": "Omar Desogus",
+        "email": "me@cedoor.dev",
+        "url": "https://cedoor.dev"
+    },
+    "homepage": "https://github.com/elekton/elektonjs",
+    "repository": {
+        "type": "git",
+        "url": "git@github.com/elekton/elektonjs.git"
+    },
+    "bugs": {
+        "url": "https://github.com/elekton/elektonjs/issues"
+    },
+    "license": "MIT",
+    "scripts": {
+        "start": "rollup -c rollup.config.ts -w",
+        "build": "rimraf dist && rollup -c rollup.config.ts && uglifyjs dist/elekton.js --comments -c -m -o dist/elekton.min.js",
+        "lint": "eslint 'src/**/*.ts' 'test/**/*.ts'",
+        "test": "jest --coverage",
+        "test:watch": "jest --coverage --watch",
+        "test:prod": "yarn lint && yarn test --no-cache",
+        "docs": "rimraf docs && typedoc --out docs --target es6 --theme minimal --mode file src",
+        "commit": "git-cz",
+        "precommit": "lint-staged"
+    },
+    "lint-staged": {
+        "{src,test}/**/*.ts": [
+            "prettier --write",
+            "eslint --fix"
+        ]
+    },
+    "jest": {
+        "transform": {
+            ".(ts|tsx)": "ts-jest"
+        },
+        "testEnvironment": "node",
+        "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js"
+        ],
+        "coveragePathIgnorePatterns": [
+            "/node_modules/",
+            "/test/"
+        ],
+        "coverageThreshold": {
+            "global": {
+                "branches": 90,
+                "functions": 95,
+                "lines": 95,
+                "statements": 95
+            }
+        },
+        "collectCoverageFrom": [
+            "src/**/*.{js,ts}"
+        ]
+    },
+    "prettier": {
+        "semi": false,
+        "arrowParens": "always",
+        "trailingComma": "none"
+    },
+    "commitlint": {
+        "extends": [
+            "@commitlint/config-conventional"
+        ]
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^11.0.0",
+        "@commitlint/config-conventional": "^11.0.0",
+        "@types/jest": "^26.0.15",
+        "@types/node": "^14.14.10",
+        "@typescript-eslint/eslint-plugin": "^4.8.2",
+        "@typescript-eslint/parser": "^4.8.2",
+        "colors": "^1.4.0",
+        "commitizen": "^4.2.2",
+        "eslint": "^7.14.0",
+        "eslint-config-prettier": "^6.15.0",
+        "jest": "^26.6.3",
+        "jest-config": "^26.6.3",
+        "lint-staged": "^10.5.2",
+        "prettier": "^2.2.0",
+        "rimraf": "^3.0.2",
+        "rollup": "^2.33.3",
+        "rollup-plugin-sourcemaps": "^0.6.3",
+        "rollup-plugin-typescript2": "^0.29.0",
+        "ts-jest": "^26.4.4",
+        "ts-node": "^9.0.0",
+        "typedoc": "^0.19.2",
+        "typescript": "^4.1.2",
+        "uglifyjs": "^2.4.11"
+    }
+}
