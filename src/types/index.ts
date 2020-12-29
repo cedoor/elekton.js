@@ -1,0 +1,1 @@
+export { ElektonConfig } from "./config"
