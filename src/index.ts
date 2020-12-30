@@ -8,16 +8,5 @@ export async function connect(elektonConfig: ElektonConfig): Promise<Elekton> {
     const elektonContract = new Contract(elektonConfig.contractAddress, elektonConfig.contractInterface, provider)
     const ipfs = IpfsHttpClient({ url: elektonConfig.ipfsProvider || "http://localhost:5001" })
 
-    const ballots = await getBallots(elektonContract)
-
-    const elekton = new Elekton(elektonContract, ipfs, ballots)
-
-    return elekton
-}
-
-async function getBallots(elektonContract: Contract): Promise<any> {
-    const filter = elektonContract.filters.BallotCreated()
-    const ballots = await elektonContract.queryFilter(filter)
-
-    return ballots
+    return new Elekton(elektonContract, ipfs)
 }
