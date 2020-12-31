@@ -23,12 +23,12 @@ export default {
             name: pkg.name,
             format: "umd",
             banner,
-            globals: { ethers: "ethers", "ipfs-http-client": "IpfsHttpClient" },
+            globals: { ethers: "ethers", "ipfs-http-client": "IpfsHttpClient", circomlib: "circomlib" },
             sourcemap: true
         },
         { file: pkg.module, format: "es", banner, sourcemap: true }
     ],
-    external: ["ethers", "ipfs-http-client"],
+    external: ["ethers", "ipfs-http-client", "circomlib"],
     watch: {
         include: "src/**"
     },

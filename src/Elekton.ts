@@ -1,8 +1,8 @@
 import IpfsHttpClient from "ipfs-http-client"
-import { Contract, Wallet, BigNumber } from "ethers"
+import { eddsa, babyJub } from "circomlib"
+import { Contract, Wallet, BigNumber, utils } from "ethers"
 import { UserData } from "./types"
 import { User } from "./User"
-import { getErrorMessage } from "./utils"
 
 export class Elekton {
     private contract: Contract
@@ -13,9 +13,17 @@ export class Elekton {
         this.ipfs = ipfs
     }
 
-    async createUser(privateKey: string, userData: UserData): Promise<User> {
+    async createUser(privateKey: string, userData: UserData): Promise<User | null> {
         const wallet = new Wallet(privateKey, this.contract.provider)
-        const user = new User(userData.name, userData.surname)
+        const user = new User(userData)
+
+        const voterPrivateKey = utils.randomBytes(32)
+        const voterPublicKey = eddsa.prv2pub(privateKey)
+
+        user.privateKey = privateKey
+        user.voterPrivateKey = BigNumber.from(voterPrivateKey).toHexString()
+        user.address = wallet.address
+        user.voterPublicKey = `0x${babyJub.packPoint(voterPublicKey).toString("hex")}`
 
         const ipfsEntry = await this.ipfs.add(user.toString())
 
@@ -25,23 +33,20 @@ export class Elekton {
             await this.contract.connect(wallet).createUser(idNumber)
 
             user.id = ipfsEntry.path
-            user.address = wallet.address
 
             return user
         } catch (error) {
-            const message = getErrorMessage(error)
-
-            if (message.includes("E001")) {
-                throw Error("User data already exists")
-            } else {
-                throw error
-            }
+            return null
         }
     }
 
-    async retrieveUser(privateKey: string): Promise<User> {
+    async retrieveUser(privateKey: string): Promise<User | null> {
         const wallet = new Wallet(privateKey, this.contract.provider)
         const idNumber = await this.contract.connect(wallet).users(wallet.address)
+
+        if (idNumber.isZero()) {
+            return null
+        }
 
         const { multihash, CID } = IpfsHttpClient as any
         const hash = multihash.fromHexString(idNumber.toHexString().slice(2))
@@ -50,10 +55,10 @@ export class Elekton {
         const { value } = await this.ipfs.cat(cid).next()
 
         const userData = JSON.parse(value.toString())
-        const user = new User(userData.name, userData.surname)
+        const user = new User(userData)
 
         user.id = cid.toString()
-        user.address = wallet.address
+        user.privateKey = privateKey
 
         return user
     }

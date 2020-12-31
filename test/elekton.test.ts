@@ -2,10 +2,18 @@ import { readFileSync } from "fs"
 import { connect } from "../src"
 import { Elekton } from "../src/Elekton"
 import { join } from "path"
+import { Wallet } from "ethers"
+import { User } from "../src/User"
 
 describe("Elekton", () => {
-    const userPrivateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
     let elekton: Elekton
+    let userPrivateKey: string
+
+    beforeAll(async () => {
+        const wallet = Wallet.fromMnemonic("test test test test test test test test test test test junk")
+
+        userPrivateKey = wallet.privateKey
+    })
 
     describe("Connect to providers", () => {
         it("Should return an Elekton instance", async () => {
@@ -23,37 +31,41 @@ describe("Elekton", () => {
 
     describe("Create a user", () => {
         it("Should create a user, if it doesn't exist", async () => {
-            try {
-                const user = await elekton.createUser(userPrivateKey, {
-                    name: "name",
-                    surname: "surname"
-                })
+            const user = await elekton.createUser(userPrivateKey, {
+                name: "name",
+                surname: "surname"
+            })
 
+            if (user) {
                 expect(user.name).toBe("name")
                 expect(user.surname).toBe("surname")
-            } catch (error) {
-                expect(error.message).toMatch("User data already exists")
             }
         })
 
         it("Should not create a user because it already exists", async () => {
-            try {
-                await elekton.createUser(userPrivateKey, {
-                    name: "name",
-                    surname: "surname"
-                })
-            } catch (error) {
-                expect(error.message).toMatch("User data already exists")
-            }
+            const user = await elekton.createUser(userPrivateKey, {
+                name: "name",
+                surname: "surname"
+            })
+
+            expect(user).toBeNull()
         })
     })
 
     describe("Retrieve a user", () => {
         it("Should retrieve an existent user", async () => {
-            const user = await elekton.retrieveUser(userPrivateKey)
+            const user = (await elekton.retrieveUser(userPrivateKey)) as User
 
+            expect(user).not.toBeNull()
             expect(user.name).toBe("name")
             expect(user.surname).toBe("surname")
+        })
+
+        it("Should not retrieve an non-existent user", async () => {
+            const wallet = Wallet.createRandom()
+            const user = await elekton.retrieveUser(wallet.privateKey)
+
+            expect(user).toBeNull()
         })
     })
 })
