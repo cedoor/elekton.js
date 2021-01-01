@@ -1,7 +1,7 @@
 import { babyJub, eddsa } from "circomlib"
 import { BigNumber, Contract, utils, VoidSigner, Wallet } from "ethers"
 import IpfsHttpClient from "ipfs-http-client"
-import { UserData } from "./types"
+import { UserInputData } from "./types"
 import { User } from "./User"
 
 export class Elekton {
@@ -13,9 +13,9 @@ export class Elekton {
         this.ipfs = ipfs
     }
 
-    async createUser(privateKey: string, userData: UserData): Promise<User | null> {
+    async createUser(privateKey: string, userInputData: UserInputData): Promise<User | null> {
         const wallet = new Wallet(privateKey, this.contract.provider)
-        const user = new User(userData)
+        const user = new User(userInputData, this.contract, this.ipfs)
 
         const voterPrivateKey = utils.randomBytes(32)
         const voterPublicKey = eddsa.prv2pub(privateKey)
@@ -63,8 +63,10 @@ export class Elekton {
         const { value } = await this.ipfs.cat(cid).next()
 
         const userData = JSON.parse(value.toString())
-        const user = new User(userData)
+        const user = new User(userData, this.contract, this.ipfs)
 
+        user.address = userData.address
+        user.voterPublicKey = userData.voterPublicKey
         user.id = cid.toString()
         user.privateKey = privateKey
 

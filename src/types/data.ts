@@ -1,18 +1,15 @@
-export interface UserData {
-    address?: string
-    voterPublicKey?: string
+import { User } from "../User"
+
+export interface UserInputData {
     name: string
     surname: string
 }
 
-export interface BallotData {
+export interface BallotInputData {
     name: string
     description: string
     proposals: string[]
-    voters: string[]
-    smtRoot: string
+    voters: User[]
     startDate: number
     endDate: number
-    votes: number[]
-    decryptionKey: string
 }
