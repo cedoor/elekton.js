@@ -1,6 +1,6 @@
+import { babyJub, eddsa } from "circomlib"
+import { BigNumber, Contract, utils, VoidSigner, Wallet } from "ethers"
 import IpfsHttpClient from "ipfs-http-client"
-import { eddsa, babyJub } from "circomlib"
-import { Contract, Wallet, BigNumber, utils } from "ethers"
 import { UserData } from "./types"
 import { User } from "./User"
 
@@ -40,9 +40,17 @@ export class Elekton {
         }
     }
 
-    async retrieveUser(privateKey: string): Promise<User | null> {
-        const wallet = new Wallet(privateKey, this.contract.provider)
-        const idNumber = await this.contract.connect(wallet).users(wallet.address)
+    async retrieveUser(privateKeyOrAddress: string): Promise<User | null> {
+        let idNumber, privateKey
+
+        if (utils.isAddress(privateKeyOrAddress)) {
+            const voidSigner = new VoidSigner(privateKeyOrAddress, this.contract.provider)
+            idNumber = await this.contract.connect(voidSigner).users(privateKeyOrAddress)
+        } else {
+            const wallet = new Wallet(privateKeyOrAddress, this.contract.provider)
+            idNumber = await this.contract.connect(wallet).users(wallet.address)
+            privateKey = privateKeyOrAddress
+        }
 
         if (idNumber.isZero()) {
             return null

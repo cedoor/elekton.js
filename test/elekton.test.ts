@@ -56,9 +56,11 @@ describe("Elekton", () => {
         it("Should retrieve an existent user", async () => {
             const user = (await elekton.retrieveUser(userPrivateKey)) as User
 
-            expect(user).not.toBeNull()
+            expect(user.address).not.toBeUndefined()
+            expect(user.voterPublicKey).not.toBeUndefined()
             expect(user.name).toBe("name")
             expect(user.surname).toBe("surname")
+            expect(user.privateKey).toBe(userPrivateKey)
         })
 
         it("Should not retrieve an non-existent user", async () => {
@@ -66,6 +68,17 @@ describe("Elekton", () => {
             const user = await elekton.retrieveUser(wallet.privateKey)
 
             expect(user).toBeNull()
+        })
+
+        it("Should retrieve a user by address", async () => {
+            const wallet = new Wallet(userPrivateKey)
+            const user = (await elekton.retrieveUser(wallet.address)) as User
+
+            expect(user.address).not.toBeUndefined()
+            expect(user.voterPublicKey).not.toBeUndefined()
+            expect(user.name).toBe("name")
+            expect(user.surname).toBe("surname")
+            expect(user.privateKey).toBeUndefined()
         })
     })
 })

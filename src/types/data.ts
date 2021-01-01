@@ -1,4 +1,6 @@
 export interface UserData {
+    address?: string
+    voterPublicKey?: string
     name: string
     surname: string
 }

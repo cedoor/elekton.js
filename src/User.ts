@@ -11,6 +11,8 @@ export class User {
     surname: string
 
     constructor(userData: UserData) {
+        this.address = userData.address
+        this.voterPublicKey = userData.voterPublicKey
         this.name = userData.name
         this.surname = userData.surname
     }
