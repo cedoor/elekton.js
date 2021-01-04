@@ -1,2 +1,2 @@
 export { ElektonConfig } from "./config"
-export { UserInputData, BallotInputData } from "./data"
+export { UserInputData, BallotInputData, UserData, BallotData } from "./data"

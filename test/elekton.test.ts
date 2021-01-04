@@ -65,7 +65,7 @@ describe("Elekton", () => {
 
         it("Should not retrieve an non-existent user", async () => {
             const wallet = Wallet.createRandom()
-            const user = await elekton.retrieveUser(wallet.privateKey)
+            const user = await elekton.retrieveUser(wallet.address)
 
             expect(user).toBeNull()
         })

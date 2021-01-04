@@ -2,6 +2,7 @@ import { babyJub, eddsa } from "circomlib"
 import { BigNumber, Contract, providers, utils, VoidSigner, Wallet } from "ethers"
 import IpfsHttpClient from "ipfs-http-client"
 import { ElektonConfig, UserInputData } from "./types"
+import { ElektonKey } from "./types/data"
 import { User } from "./User"
 
 export class Elekton {
@@ -40,23 +41,26 @@ export class Elekton {
         }
     }
 
-    async retrieveUser(privateKeyOrAddress: string): Promise<User | null> {
+    async retrieveUser(privateKeyOrAddressOrIpfsCid: string, voterPrivateKey?: string): Promise<User | null> {
+        const { CID, multihash } = IpfsHttpClient as any
         let idNumber, privateKey
 
-        if (utils.isAddress(privateKeyOrAddress)) {
-            const voidSigner = new VoidSigner(privateKeyOrAddress, this.contract.provider)
-            idNumber = await this.contract.connect(voidSigner).users(privateKeyOrAddress)
+        if (utils.isAddress(privateKeyOrAddressOrIpfsCid)) {
+            const voidSigner = new VoidSigner(privateKeyOrAddressOrIpfsCid, this.contract.provider)
+            idNumber = await this.contract.connect(voidSigner).users(privateKeyOrAddressOrIpfsCid)
+        } else if (CID.isCID(privateKeyOrAddressOrIpfsCid)) {
+            const cid = new CID(privateKeyOrAddressOrIpfsCid)
+            idNumber = BigNumber.from(cid.multihash.slice(2))
         } else {
-            const wallet = new Wallet(privateKeyOrAddress, this.contract.provider)
+            const wallet = new Wallet(privateKeyOrAddressOrIpfsCid, this.contract.provider)
             idNumber = await this.contract.connect(wallet).users(wallet.address)
-            privateKey = privateKeyOrAddress
+            privateKey = privateKeyOrAddressOrIpfsCid
         }
 
         if (idNumber.isZero()) {
             return null
         }
 
-        const { multihash, CID } = IpfsHttpClient as any
         const hash = multihash.fromHexString(idNumber.toHexString().slice(2))
         const cid = new CID(new Uint8Array([18, 32, ...hash]))
 
@@ -67,6 +71,7 @@ export class Elekton {
 
         user.id = cid.toString()
         user.privateKey = privateKey
+        user.voterPrivateKey = voterPrivateKey
 
         return user
     }
