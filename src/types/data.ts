@@ -5,6 +5,11 @@ export interface UserInputData {
     surname: string
 }
 
+export interface UserData extends UserInputData {
+    address: string
+    voterPublicKey: string
+}
+
 export interface BallotInputData {
     name: string
     description: string
@@ -12,4 +17,8 @@ export interface BallotInputData {
     voters: User[]
     startDate: number
     endDate: number
+}
+
+export interface BallotData extends BallotInputData {
+    admin: string
 }

@@ -1,12 +1,12 @@
-import { BallotInputData } from "./types"
+import { BallotData } from "./types/data"
 import { User } from "./User"
 
 export class Ballot {
-    id?: string // IPFS hash cid.
+    id?: string // IPFS CID.
     votes?: number[]
     decryptionKey?: string
 
-    admin: string // IPFS hash cid.
+    admin: string // IPFS CID.
     name: string
     description: string
     proposals: string[]
@@ -14,8 +14,8 @@ export class Ballot {
     startDate: number
     endDate: number
 
-    constructor(ballotData: BallotInputData, admin: string) {
-        this.admin = admin
+    constructor(ballotData: BallotData) {
+        this.admin = ballotData.admin
         this.name = ballotData.name
         this.description = ballotData.description
         this.proposals = ballotData.proposals

@@ -5,5 +5,4 @@ export interface ElektonConfig {
     contractInterface: ContractInterface
     ethereumProvider?: string
     ipfsProvider?: string
-    userAddress?: string
 }

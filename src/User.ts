@@ -1,27 +1,31 @@
-import { BallotInputData, UserInputData } from "./types"
 import { babyJub, smt } from "circomlib"
-import { Ballot } from "./Ballot"
 import { BigNumber, Contract, VoidSigner, Wallet } from "ethers"
 import IpfsHttpClient from "ipfs-http-client"
+import { Ballot } from "./Ballot"
+import { BallotInputData } from "./types"
+import { BallotData, UserData } from "./types/data"
 
 export class User {
     private contract: Contract
     private ipfs: any
 
-    id?: string // IPFS hash cid.
+    id?: string // IPFS CID.
     privateKey?: string // Ethereum private key.
     voterPrivateKey?: string // EdDSA private key (hexadecimal).
-    address?: string // Ethereum address.
-    voterPublicKey?: string // EdDSA public key (hexadecimal).
 
+    address: string // Ethereum address.
+    voterPublicKey: string // EdDSA public key (hexadecimal).
     name: string
     surname: string
 
-    constructor(userInputData: UserInputData, contract: Contract, ipfs: any) {
+    constructor(userData: UserData, contract: Contract, ipfs: any) {
         this.contract = contract
         this.ipfs = ipfs
-        this.name = userInputData.name
-        this.surname = userInputData.surname
+
+        this.address = userData.address
+        this.voterPublicKey = userData.voterPublicKey
+        this.name = userData.name
+        this.surname = userData.surname
     }
 
     async createBallot(ballotInputData: BallotInputData): Promise<Ballot | null> {
@@ -29,7 +33,7 @@ export class User {
             return null
         }
 
-        const ballot = new Ballot(ballotInputData, this.id as string)
+        const ballot = new Ballot({ ...ballotInputData, admin: this.id as string })
         const tree = await smt.newMemEmptyTrie()
 
         for (const voter of ballotInputData.voters) {
@@ -52,7 +56,6 @@ export class User {
 
             return ballot
         } catch (error) {
-            console.log(error)
             return null
         }
     }
@@ -70,9 +73,9 @@ export class User {
         const contractBallot = await this.contract.connect(voidSigner).ballots(idNumber)
 
         const { value } = await this.ipfs.cat(cid).next()
-        const ballotData = JSON.parse(value.toString())
+        const ballotData = JSON.parse(value.toString()) as BallotData
 
-        const ballot = new Ballot(ballotData, ballotData.admin)
+        const ballot = new Ballot(ballotData)
 
         if (!contractBallot.decryptionKey.isZero()) {
             ballot.decryptionKey = contractBallot.decryptionKey.toString()

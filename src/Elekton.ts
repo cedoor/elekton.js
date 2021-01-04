@@ -1,29 +1,27 @@
 import { babyJub, eddsa } from "circomlib"
-import { BigNumber, Contract, utils, VoidSigner, Wallet } from "ethers"
+import { BigNumber, Contract, providers, utils, VoidSigner, Wallet } from "ethers"
 import IpfsHttpClient from "ipfs-http-client"
-import { UserInputData } from "./types"
+import { ElektonConfig, UserInputData } from "./types"
 import { User } from "./User"
 
 export class Elekton {
     private contract: Contract
     private ipfs: any
 
-    constructor(contract: Contract, ipfs: any) {
-        this.contract = contract
-        this.ipfs = ipfs
+    constructor(elektonConfig: ElektonConfig) {
+        const provider = new providers.JsonRpcProvider(elektonConfig.ethereumProvider || "http://localhost:8545")
+
+        this.contract = new Contract(elektonConfig.contractAddress, elektonConfig.contractInterface, provider)
+        this.ipfs = IpfsHttpClient({ url: elektonConfig.ipfsProvider || "http://localhost:5001" })
     }
 
     async createUser(privateKey: string, userInputData: UserInputData): Promise<User | null> {
         const wallet = new Wallet(privateKey, this.contract.provider)
-        const user = new User(userInputData, this.contract, this.ipfs)
 
         const voterPrivateKey = utils.randomBytes(32)
-        const voterPublicKey = eddsa.prv2pub(privateKey)
+        const voterPublicKey = `0x${babyJub.packPoint(eddsa.prv2pub(privateKey)).toString("hex")}`
 
-        user.privateKey = privateKey
-        user.voterPrivateKey = BigNumber.from(voterPrivateKey).toHexString()
-        user.address = wallet.address
-        user.voterPublicKey = `0x${babyJub.packPoint(voterPublicKey).toString("hex")}`
+        const user = new User({ ...userInputData, address: wallet.address, voterPublicKey }, this.contract, this.ipfs)
 
         const ipfsEntry = await this.ipfs.add(user.toString())
 
@@ -33,6 +31,8 @@ export class Elekton {
             await this.contract.connect(wallet).createUser(idNumber)
 
             user.id = ipfsEntry.path
+            user.privateKey = privateKey
+            user.voterPrivateKey = BigNumber.from(voterPrivateKey).toHexString()
 
             return user
         } catch (error) {
@@ -65,8 +65,6 @@ export class Elekton {
         const userData = JSON.parse(value.toString())
         const user = new User(userData, this.contract, this.ipfs)
 
-        user.address = userData.address
-        user.voterPublicKey = userData.voterPublicKey
         user.id = cid.toString()
         user.privateKey = privateKey
 

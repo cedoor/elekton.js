@@ -19,7 +19,7 @@ describe("User", () => {
         const abiPath = "../../contracts/build/contracts/contracts/Elekton.sol/Elekton.json"
         const { abi } = JSON.parse(readFileSync(join(__dirname, abiPath), "utf8"))
 
-        elekton = await connect({
+        elekton = connect({
             contractAddress: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
             contractInterface: abi
         })
