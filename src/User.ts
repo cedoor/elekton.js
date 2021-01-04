@@ -1,13 +1,14 @@
 import { BallotInputData, UserInputData } from "./types"
 import { babyJub, smt } from "circomlib"
 import { Ballot } from "./Ballot"
-import { BigNumber, Contract, Wallet } from "ethers"
+import { BigNumber, Contract, VoidSigner, Wallet } from "ethers"
+import IpfsHttpClient from "ipfs-http-client"
 
 export class User {
     private contract: Contract
     private ipfs: any
 
-    id?: number // IPFS hash.
+    id?: string // IPFS hash cid.
     privateKey?: string // Ethereum private key.
     voterPrivateKey?: string // EdDSA private key (hexadecimal).
     address?: string // Ethereum address.
@@ -28,7 +29,7 @@ export class User {
             return null
         }
 
-        const ballot = new Ballot(ballotInputData, this)
+        const ballot = new Ballot(ballotInputData, this.id as string)
         const tree = await smt.newMemEmptyTrie()
 
         for (const voter of ballotInputData.voters) {
@@ -54,6 +55,34 @@ export class User {
             console.log(error)
             return null
         }
+    }
+
+    async retrieveBallot(id: string): Promise<Ballot | null> {
+        if (!this.address) {
+            return null
+        }
+
+        const { CID } = IpfsHttpClient as any
+        const cid = new CID(id)
+        const idNumber = BigNumber.from(cid.multihash.slice(2))
+
+        const voidSigner = new VoidSigner(this.address, this.contract.provider)
+        const contractBallot = await this.contract.connect(voidSigner).ballots(idNumber)
+
+        const { value } = await this.ipfs.cat(cid).next()
+        const ballotData = JSON.parse(value.toString())
+
+        const ballot = new Ballot(ballotData, ballotData.admin)
+
+        if (!contractBallot.decryptionKey.isZero()) {
+            ballot.decryptionKey = contractBallot.decryptionKey.toString()
+        }
+
+        if (ballot.votes) {
+            ballot.votes = contractBallot.votes
+        }
+
+        return ballot
     }
 
     toString(): string {

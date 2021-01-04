@@ -2,11 +2,11 @@ import { BallotInputData } from "./types"
 import { User } from "./User"
 
 export class Ballot {
-    id?: string // IPFS hash.
+    id?: string // IPFS hash cid.
     votes?: number[]
     decryptionKey?: string
 
-    user: User
+    admin: string // IPFS hash cid.
     name: string
     description: string
     proposals: string[]
@@ -14,8 +14,8 @@ export class Ballot {
     startDate: number
     endDate: number
 
-    constructor(ballotData: BallotInputData, user: User) {
-        this.user = user
+    constructor(ballotData: BallotInputData, admin: string) {
+        this.admin = admin
         this.name = ballotData.name
         this.description = ballotData.description
         this.proposals = ballotData.proposals
@@ -26,7 +26,7 @@ export class Ballot {
 
     toString(): string {
         return JSON.stringify({
-            user: this.user.id,
+            admin: this.admin,
             name: this.name,
             description: this.description,
             proposals: this.proposals,

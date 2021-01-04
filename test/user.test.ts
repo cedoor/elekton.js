@@ -8,6 +8,7 @@ import { Ballot } from "../src/Ballot"
 describe("User", () => {
     let elekton: Elekton
     const users: User[] = []
+    const ballots: Ballot[] = []
     const userPrivateKeys = [
         "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
         "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",
@@ -57,6 +58,18 @@ describe("User", () => {
 
             expect(ballot).toBeInstanceOf(Ballot)
             expect(ballot.id).not.toBeNull()
+
+            ballots.push(ballot)
+        })
+    })
+
+    describe("Retrieve a ballot", () => {
+        it("Should retrieve an existent ballot", async () => {
+            const existentBallot = ballots[0] as Ballot
+            const ballot = (await users[0].retrieveBallot(existentBallot.id as string)) as Ballot
+
+            expect(ballot.name).toBe(ballots[0].name)
+            expect(ballot.description).toBe(ballots[0].description)
         })
     })
 })
