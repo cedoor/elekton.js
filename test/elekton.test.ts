@@ -1,28 +1,22 @@
-import { readFileSync } from "fs"
 import { connect } from "../src"
 import { Elekton } from "../src/Elekton"
-import { join } from "path"
 import { Wallet } from "ethers"
 import { User } from "../src/User"
+import { deployElektonContract, userPrivateKeys } from "./utils"
+import { join } from "path"
 
 describe("Elekton", () => {
     let elekton: Elekton
-    let userPrivateKey: string
-
-    beforeAll(async () => {
-        const wallet = Wallet.fromMnemonic("test test test test test test test test test test test junk")
-
-        userPrivateKey = wallet.privateKey
-    })
 
     describe("Connect to providers", () => {
         it("Should return an Elekton instance", async () => {
-            const abiPath = "../../contracts/build/contracts/contracts/Elekton.sol/Elekton.json"
-            const { abi } = JSON.parse(readFileSync(join(__dirname, abiPath), "utf8"))
+            const contract = await deployElektonContract()
 
             elekton = connect({
-                contractAddress: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-                contractInterface: abi
+                contractAddress: contract.address,
+                contractInterface: contract.interface,
+                wasmFilePath: join(__dirname, "../../contracts/build/snark/main.wasm"),
+                zkeyFilePath: join(__dirname, "../../contracts/build/snark/circuit_final.zkey")
             })
 
             expect(elekton).toBeInstanceOf(Elekton)
@@ -30,37 +24,36 @@ describe("Elekton", () => {
     })
 
     describe("Create a user", () => {
-        it("Should create a user, if it doesn't exist", async () => {
-            const user = await elekton.createUser(userPrivateKey, {
+        it("Should create a user", async () => {
+            const user = (await elekton.createUser(userPrivateKeys[0], {
                 name: "name",
                 surname: "surname"
-            })
+            })) as User
 
-            if (user) {
-                expect(user.name).toBe("name")
-                expect(user.surname).toBe("surname")
-            }
+            expect(user.name).toBe("name")
+            expect(user.surname).toBe("surname")
         })
 
-        it("Should not create a user because it already exists", async () => {
-            const user = await elekton.createUser(userPrivateKey, {
-                name: "name",
-                surname: "surname"
-            })
+        it("Should update user data", async () => {
+            const user = (await elekton.createUser(userPrivateKeys[0], {
+                name: "name2",
+                surname: "surname2"
+            })) as User
 
-            expect(user).toBeNull()
+            expect(user.name).toBe("name2")
+            expect(user.surname).toBe("surname2")
         })
     })
 
     describe("Retrieve a user", () => {
         it("Should retrieve an existent user", async () => {
-            const user = (await elekton.retrieveUser(userPrivateKey)) as User
+            const user = (await elekton.retrieveUser(userPrivateKeys[0])) as User
 
             expect(user.address).not.toBeUndefined()
             expect(user.voterPublicKey).not.toBeUndefined()
-            expect(user.name).toBe("name")
-            expect(user.surname).toBe("surname")
-            expect(user.privateKey).toBe(userPrivateKey)
+            expect(user.name).toBe("name2")
+            expect(user.surname).toBe("surname2")
+            expect(user.privateKey).toBe(userPrivateKeys[0])
         })
 
         it("Should not retrieve an non-existent user", async () => {
@@ -71,13 +64,13 @@ describe("Elekton", () => {
         })
 
         it("Should retrieve a user by address", async () => {
-            const wallet = new Wallet(userPrivateKey)
+            const wallet = new Wallet(userPrivateKeys[0])
             const user = (await elekton.retrieveUser(wallet.address)) as User
 
             expect(user.address).not.toBeUndefined()
             expect(user.voterPublicKey).not.toBeUndefined()
-            expect(user.name).toBe("name")
-            expect(user.surname).toBe("surname")
+            expect(user.name).toBe("name2")
+            expect(user.surname).toBe("surname2")
             expect(user.privateKey).toBeUndefined()
         })
     })
