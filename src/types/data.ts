@@ -39,5 +39,5 @@ export interface BallotData extends BallotIpfsData {
     index: number
     ipfsCid: string
     votes: number[]
-    decryptionKey?: string
+    decryptionKey?: number
 }

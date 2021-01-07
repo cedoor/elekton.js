@@ -15,6 +15,7 @@ describe("Ballot", () => {
     let contract: Contract
     let elekton: Elekton
     let users: User[]
+    let ballot: Ballot
 
     beforeAll(async () => {
         contract = await deployElektonContract()
@@ -27,7 +28,7 @@ describe("Ballot", () => {
             const timestamp = await getLastBlockTimestamp(contract.provider)
             const startDate = timestamp + 5
             const endDate = timestamp + 15
-            const ballot = (await createBallot(users, startDate, endDate)) as Ballot
+            ballot = (await createBallot(users, startDate, endDate)) as Ballot
             const vote = 3
 
             await delay(5000)
@@ -35,6 +36,17 @@ describe("Ballot", () => {
             await ballot.vote(users[0], vote)
 
             expect(ballot.votes[0]).toBe(vote)
+        })
+    })
+
+    describe("Publish decryption key", () => {
+        it("Should publish a ballot decryption key", async () => {
+            const decryptionKey = 3
+
+            await delay(6000)
+            await ballot.publishDecryptionKey(users[0], decryptionKey)
+
+            expect(ballot.decryptionKey).toBe(decryptionKey)
         })
     })
 })

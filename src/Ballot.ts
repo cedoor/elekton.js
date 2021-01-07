@@ -14,7 +14,7 @@ export class Ballot {
     index: number
     ipfsCid: string
     votes: number[]
-    decryptionKey?: string
+    decryptionKey?: number
 
     adminAddress: string // Ethereum address.
     name: string
@@ -87,7 +87,14 @@ export class Ballot {
         this.votes.push(vote)
     }
 
-    // publishDecryptionKey: Promise<void>
+    async publishDecryptionKey(user: User, decryptionKey: number): Promise<void> {
+        const wallet = new Wallet(user.privateKey as string, this.contract.provider)
+        const tx = await this.contract.connect(wallet).publishDecryptionKey(this.index, decryptionKey)
+
+        await tx.wait()
+
+        this.decryptionKey = decryptionKey
+    }
 
     static dataToString(ballotIpfsData: BallotIpfsData): string {
         return JSON.stringify(ballotIpfsData)
