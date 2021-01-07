@@ -1,7 +1,7 @@
-import { Contract, VoidSigner, Wallet } from "ethers"
+import { Contract, Wallet } from "ethers"
 import { Ballot } from "./Ballot"
-import { BallotInputData, BallotIpfsData, ElektonConfig, UserData, UserIpfsData } from "./types"
-import { createSparseMerkleTree, fromCidToHex, fromHexToCid } from "./utils"
+import { BallotInputData, ElektonConfig, UserData, UserIpfsData } from "./types"
+import { createSparseMerkleTree, fromCidToHex } from "./utils"
 
 export class User {
     private config: ElektonConfig
@@ -19,6 +19,7 @@ export class User {
 
     constructor(userData: UserData) {
         this.contract = userData.contract
+
         this.ipfs = userData.ipfs
         this.config = userData.config
 
@@ -52,7 +53,7 @@ export class User {
                 .createBallot(ipfsCidHex, tree.root, ballotInputData.startDate, ballotInputData.endDate)
 
             const txReceipt = await tx.wait()
-            const index = txReceipt.events[0].args._index.toString()
+            const index = txReceipt.events[0].args._index.toNumber()
 
             return new Ballot({
                 ...ballotIpfsData,
@@ -65,25 +66,6 @@ export class User {
         } catch (error) {
             return null
         }
-    }
-
-    async retrieveBallot(index: number): Promise<Ballot | null> {
-        const voidSigner = new VoidSigner(this.address, this.contract.provider)
-        const contractBallot = await this.contract.connect(voidSigner).ballots(index)
-
-        const ipfsCid = fromHexToCid(contractBallot.data)
-        const { value } = await this.ipfs.cat(ipfsCid).next()
-        const ballotIpfsData = JSON.parse(value.toString()) as BallotIpfsData
-
-        return new Ballot({
-            ...ballotIpfsData,
-            contract: this.contract,
-            config: this.config,
-            index,
-            ipfsCid,
-            votes: contractBallot.votes || [],
-            decryptionKey: contractBallot.decryptionKey
-        })
     }
 
     static dataToString(userIpfsData: UserIpfsData): string {

@@ -1,16 +1,18 @@
 import { connect } from "../src"
 import { Elekton } from "../src/Elekton"
-import { Wallet } from "ethers"
+import { Contract, Wallet } from "ethers"
 import { User } from "../src/User"
-import { deployElektonContract, userPrivateKeys } from "./utils"
+import { createBallot, createUsers, deployElektonContract, getLastBlockTimestamp, userPrivateKeys } from "./utils"
 import { join } from "path"
+import { Ballot } from "../src/Ballot"
 
 describe("Elekton", () => {
+    let contract: Contract
     let elekton: Elekton
 
     describe("Connect to providers", () => {
         it("Should return an Elekton instance", async () => {
-            const contract = await deployElektonContract()
+            contract = await deployElektonContract()
 
             elekton = connect({
                 contractAddress: contract.address,
@@ -72,6 +74,29 @@ describe("Elekton", () => {
             expect(user.name).toBe("name2")
             expect(user.surname).toBe("surname2")
             expect(user.privateKey).toBeUndefined()
+        })
+    })
+
+    describe("Retrieve a ballot", () => {
+        it("Should retrieve an existent ballot", async () => {
+            const users = await createUsers(elekton)
+            const timestamp = await getLastBlockTimestamp(contract.provider)
+            const startDate = timestamp + 5
+            const endDate = timestamp + 15
+            const ballot = (await createBallot(users, startDate, endDate)) as Ballot
+
+            const retrievedBallot = (await elekton.retrieveBallot(0)) as Ballot
+
+            expect(retrievedBallot.name).toBe(ballot.name)
+            expect(retrievedBallot.description).toBe(ballot.description)
+        })
+    })
+
+    describe("Retrieve ballots", () => {
+        it("Should retrieve 1 ballot", async () => {
+            const ballots = await elekton.retrieveBallots()
+
+            expect(ballots.length).toBe(1)
         })
     })
 })

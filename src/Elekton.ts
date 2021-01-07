@@ -1,7 +1,8 @@
 import { babyJub, eddsa } from "circomlib"
 import { BigNumber, Contract, providers, utils, VoidSigner, Wallet, constants } from "ethers"
 import IpfsHttpClient from "ipfs-http-client"
-import { ElektonConfig, UserInputData, UserIpfsData } from "./types"
+import { Ballot } from "./Ballot"
+import { BallotIpfsData, ElektonConfig, UserInputData, UserIpfsData } from "./types"
 import { User } from "./User"
 import { fromCidToHex, fromHexToCid } from "./utils"
 
@@ -90,14 +91,40 @@ export class Elekton {
         })
     }
 
-    // async getBallots(last = 1): Promise<any | any[]> {
-    // const filter = this.contract.filters.BallotCreated()
-    // const ballots = await this.contract.queryFilter(filter)
+    async retrieveBallot(index: number): Promise<Ballot | null> {
+        const voidSigner = new VoidSigner(this.contract.address, this.contract.provider)
+        const contractBallot = await this.contract.connect(voidSigner).ballots(index)
 
-    // if (last === 1) {
-    // return ballots[0]
-    // }
+        const ipfsCid = fromHexToCid(contractBallot.data)
+        const { value } = await this.ipfs.cat(ipfsCid).next()
+        const ballotIpfsData = JSON.parse(value.toString()) as BallotIpfsData
 
-    // return ballots.slice(0, last)
-    // }
+        return new Ballot({
+            ...ballotIpfsData,
+            contract: this.contract,
+            config: this.config,
+            index,
+            ipfsCid,
+            votes: contractBallot.votes || [],
+            decryptionKey: contractBallot.decryptionKey
+        })
+    }
+
+    async retrieveBallots(last = 5): Promise<Ballot[]> {
+        const filter = this.contract.filters.BallotCreated()
+        const ballotEvents = await this.contract.queryFilter(filter)
+        const ballots: Ballot[] = []
+
+        if (ballotEvents.length < last) {
+            last = ballotEvents.length
+        }
+
+        for (let i = 0; i < last; i++) {
+            const index = ballotEvents.length - last + i
+
+            ballots.push((await this.retrieveBallot(index)) as Ballot)
+        }
+
+        return ballots
+    }
 }

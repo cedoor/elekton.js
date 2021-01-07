@@ -42,13 +42,4 @@ describe("User", () => {
             ballots.push(ballot)
         })
     })
-
-    describe("Retrieve a ballot", () => {
-        it("Should retrieve an existent ballot", async () => {
-            const ballot = (await users[0].retrieveBallot(0)) as Ballot
-
-            expect(ballot.name).toBe(ballots[0].name)
-            expect(ballot.description).toBe(ballots[0].description)
-        })
-    })
 })
