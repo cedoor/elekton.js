@@ -1,15 +1,14 @@
-import { babyJub, smt } from "circomlib"
-import { BigNumber, Contract, VoidSigner, Wallet } from "ethers"
-import IpfsHttpClient from "ipfs-http-client"
+import { Contract, VoidSigner, Wallet } from "ethers"
 import { Ballot } from "./Ballot"
-import { BallotInputData } from "./types"
-import { BallotData, UserData } from "./types/data"
+import { BallotInputData, BallotIpfsData, ElektonConfig, UserData, UserIpfsData } from "./types"
+import { createSparseMerkleTree, fromCidToHex, fromHexToCid } from "./utils"
 
 export class User {
+    private config: ElektonConfig
     private contract: Contract
     private ipfs: any
 
-    id?: string // IPFS CID.
+    ipfsCid: string
     privateKey?: string // Ethereum private key.
     voterPrivateKey?: string // EdDSA private key (hexadecimal).
 
@@ -18,9 +17,14 @@ export class User {
     name: string
     surname: string
 
-    constructor(userData: UserData, contract: Contract, ipfs: any) {
-        this.contract = contract
-        this.ipfs = ipfs
+    constructor(userData: UserData) {
+        this.contract = userData.contract
+        this.ipfs = userData.ipfs
+        this.config = userData.config
+
+        this.ipfsCid = userData.ipfsCid
+        this.privateKey = userData.privateKey
+        this.voterPrivateKey = userData.voterPrivateKey
 
         this.address = userData.address
         this.voterPublicKey = userData.voterPublicKey
@@ -33,67 +37,56 @@ export class User {
             return null
         }
 
-        const ballot = new Ballot({ ...ballotInputData, admin: this.id as string })
-        const tree = await smt.newMemEmptyTrie()
+        const wallet = new Wallet(this.privateKey, this.contract.provider)
 
-        for (const voter of ballotInputData.voters) {
-            const hexDigits = voter.voterPublicKey?.slice(2)?.match(/[\da-f]{2}/gi) as RegExpMatchArray
-            const typedArray = new Uint8Array(hexDigits.map((h) => parseInt(h, 16)))
-            const voterPublicKeyPoint = babyJub.unpackPoint(typedArray.buffer)
+        const tree = await createSparseMerkleTree(ballotInputData.voterPublicKeys)
 
-            await tree.insert(...voterPublicKeyPoint)
-        }
-
-        const ipfsEntry = await this.ipfs.add(ballot.toString())
+        // Add ballot data to IPFS.
+        const ballotIpfsData = { ...ballotInputData, adminAddress: this.address }
+        const ipfsEntry = await this.ipfs.add(Ballot.dataToString(ballotIpfsData))
+        const ipfsCidHex = fromCidToHex(ipfsEntry.cid)
 
         try {
-            const idNumber = BigNumber.from(ipfsEntry.cid.multihash.slice(2))
-            const wallet = new Wallet(this.privateKey, this.contract.provider)
+            const tx = await this.contract
+                .connect(wallet)
+                .createBallot(ipfsCidHex, tree.root, ballotInputData.startDate, ballotInputData.endDate)
 
-            await this.contract.connect(wallet).createBallot(idNumber, tree.root, ballot.startDate, ballot.endDate)
+            const txReceipt = await tx.wait()
+            const index = txReceipt.events[0].args._index.toString()
 
-            ballot.id = ipfsEntry.path
-
-            return ballot
+            return new Ballot({
+                ...ballotIpfsData,
+                contract: this.contract,
+                config: this.config,
+                index,
+                ipfsCid: ipfsEntry.cid.toString(),
+                votes: []
+            })
         } catch (error) {
             return null
         }
     }
 
-    async retrieveBallot(id: string): Promise<Ballot | null> {
-        if (!this.address) {
-            return null
-        }
-
-        const { CID } = IpfsHttpClient as any
-        const cid = new CID(id)
-        const idNumber = BigNumber.from(cid.multihash.slice(2))
-
+    async retrieveBallot(index: number): Promise<Ballot | null> {
         const voidSigner = new VoidSigner(this.address, this.contract.provider)
-        const contractBallot = await this.contract.connect(voidSigner).ballots(idNumber)
+        const contractBallot = await this.contract.connect(voidSigner).ballots(index)
 
-        const { value } = await this.ipfs.cat(cid).next()
-        const ballotData = JSON.parse(value.toString()) as BallotData
+        const ipfsCid = fromHexToCid(contractBallot.data)
+        const { value } = await this.ipfs.cat(ipfsCid).next()
+        const ballotIpfsData = JSON.parse(value.toString()) as BallotIpfsData
 
-        const ballot = new Ballot(ballotData)
-
-        if (!contractBallot.decryptionKey.isZero()) {
-            ballot.decryptionKey = contractBallot.decryptionKey.toString()
-        }
-
-        if (ballot.votes) {
-            ballot.votes = contractBallot.votes
-        }
-
-        return ballot
+        return new Ballot({
+            ...ballotIpfsData,
+            contract: this.contract,
+            config: this.config,
+            index,
+            ipfsCid,
+            votes: contractBallot.votes || [],
+            decryptionKey: contractBallot.decryptionKey
+        })
     }
 
-    toString(): string {
-        return JSON.stringify({
-            address: this.address,
-            voterPublicKey: this.voterPublicKey,
-            name: this.name,
-            surname: this.surname
-        })
+    static dataToString(userIpfsData: UserIpfsData): string {
+        return JSON.stringify(userIpfsData)
     }
 }

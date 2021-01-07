@@ -3,6 +3,7 @@ import { BigNumber, Contract, providers, utils, VoidSigner, Wallet, constants } 
 import IpfsHttpClient from "ipfs-http-client"
 import { ElektonConfig, UserInputData, UserIpfsData } from "./types"
 import { User } from "./User"
+import { fromCidToHex, fromHexToCid } from "./utils"
 
 export class Elekton {
     private config: ElektonConfig
@@ -23,9 +24,10 @@ export class Elekton {
         const voterPrivateKeyBuffer = Buffer.from(utils.randomBytes(32))
         const voterPublicKey = `0x${babyJub.packPoint(eddsa.prv2pub(voterPrivateKeyBuffer)).toString("hex")}`
 
-        const userIpfsData: UserIpfsData = { ...userInputData, address: wallet.address, voterPublicKey }
+        // Add user data to IPFS.
+        const userIpfsData = { ...userInputData, address: wallet.address, voterPublicKey }
         const ipfsEntry = await this.ipfs.add(User.dataToString(userIpfsData))
-        const ipfsCidHex = utils.hexlify(ipfsEntry.cid.multihash.slice(2))
+        const ipfsCidHex = fromCidToHex(ipfsEntry.cid)
 
         try {
             await this.contract.connect(wallet).createUser(ipfsCidHex)
@@ -69,7 +71,7 @@ export class Elekton {
                     return null
                 }
 
-                ipfsCid = new CID(utils.arrayify(`0x1220${ipfsCidHex.slice(2)}`))
+                ipfsCid = fromHexToCid(ipfsCidHex)
             } catch (error) {
                 return null
             }
@@ -78,7 +80,7 @@ export class Elekton {
         const { value } = await this.ipfs.cat(ipfsCid).next()
         const userIpfsData: UserIpfsData = JSON.parse(value.toString())
 
-        const user = new User({
+        return new User({
             ...userIpfsData,
             contract: this.contract,
             ipfs: this.ipfs,
@@ -86,8 +88,6 @@ export class Elekton {
             ipfsCid,
             privateKey
         })
-
-        return user
     }
 
     // async getBallots(last = 1): Promise<any | any[]> {
