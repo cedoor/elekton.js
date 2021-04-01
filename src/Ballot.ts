@@ -55,11 +55,11 @@ export class Ballot {
         const signature = eddsa.signPoseidon(hexToBuffer(user.voterPrivateKey), BigInt(vote))
         const voteNullifier = poseidon([this.index, ppk])
 
-        const tree = await createSparseMerkleTree(this.voterPublicKeys)
-        const { siblings } = await tree.find(unpackVoterPublicKey(user.voterPublicKey)[0])
+        const tree = createSparseMerkleTree(this.voterPublicKeys)
+        const { sidenodes } = tree.createProof(unpackVoterPublicKey(user.voterPublicKey)[0])
 
-        while (siblings.length < 10) {
-            siblings.push(BigInt(0))
+        while (sidenodes.length < 10) {
+            sidenodes.push(BigInt(0))
         }
 
         const proofParameters = await getProofParameters(
@@ -68,7 +68,7 @@ export class Ballot {
                 R8x: signature.R8[0],
                 R8y: signature.R8[1],
                 S: signature.S,
-                smtSiblings: siblings,
+                smtSiblings: sidenodes,
                 smtRoot: tree.root,
                 vote: BigInt(vote),
                 ballotIndex: this.index,

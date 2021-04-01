@@ -1,7 +1,9 @@
 import { BigNumber, utils } from "ethers"
 import { groth16 } from "snarkjs"
 import IpfsHttpClient from "ipfs-http-client"
-import { smt, babyJub } from "circomlib"
+import { babyJub, poseidon } from "circomlib"
+import { SMT } from "@cedoor/smt"
+import { ChildNodes } from "@cedoor/smt/dist/types/smt"
 
 export function fromHexToCid(ipfsCidHex: string): string {
     const { CID } = IpfsHttpClient as any
@@ -21,19 +23,20 @@ export function fromCidToHex(ipfsCid: any | string): string {
     return utils.hexlify(ipfsCid.multihash.slice(2))
 }
 
-export async function createSparseMerkleTree(voterPublicKeys: string[]): Promise<any> {
-    const tree = await smt.newMemEmptyTrie()
+export function createSparseMerkleTree(voterPublicKeys: string[]): SMT {
+    const hash = (childNodes: ChildNodes) => poseidon(childNodes)
+    const tree = new SMT(hash, true)
 
     for (const voterPublicKey of voterPublicKeys) {
         const voterPublicKeyPoint = unpackVoterPublicKey(voterPublicKey)
 
-        await tree.insert(...voterPublicKeyPoint)
+        tree.add(voterPublicKeyPoint[0], voterPublicKeyPoint[1])
     }
 
     return tree
 }
 
-export function unpackVoterPublicKey(voterPublicKey: string): [BigInt, BigInt] {
+export function unpackVoterPublicKey(voterPublicKey: string): [bigint, bigint] {
     const voterPublicKeyBuffer = utils.arrayify(voterPublicKey).buffer
 
     return babyJub.unpackPoint(voterPublicKeyBuffer)
@@ -59,7 +62,7 @@ export async function getProofParameters(input: any, wasmFilePath: string, zkeyF
     ]
 }
 
-export async function fromBigNumberToBytes32(n: any) {
+export function fromBigNumberToBytes32(n: any) {
     const hex = BigNumber.from(n).toHexString()
 
     return utils.hexZeroPad(hex, 32)
