@@ -1,10 +1,17 @@
-import { connect } from "../src"
-import { Elekton } from "../src/Elekton"
 import { Contract, Wallet } from "ethers"
-import { User } from "../src/User"
-import { createBallot, createUsers, deployElektonContract, getLastBlockTimestamp, userPrivateKeys } from "./utils"
 import { join } from "path"
+import { connect } from "../src"
 import { Ballot } from "../src/Ballot"
+import { Elekton } from "../src/Elekton"
+import { User } from "../src/User"
+import {
+    createBallot,
+    createUsers,
+    delay,
+    deployElektonContract,
+    getLastBlockTimestamp,
+    userPrivateKeys
+} from "./utils"
 
 describe("Elekton", () => {
     let contract: Contract
@@ -97,6 +104,52 @@ describe("Elekton", () => {
             const ballots = await elekton.retrieveBallots()
 
             expect(ballots.length).toBe(1)
+        })
+    })
+
+    describe("Add ballot event listeners", () => {
+        let users: User[]
+        let ballot: Ballot
+
+        beforeAll(async () => {
+            users = await createUsers(elekton)
+        })
+
+        it("Should create a listener for the BallotCreated event", async (done) => {
+            const timestamp = await getLastBlockTimestamp(contract.provider)
+            const startDate = timestamp + 5
+            const endDate = timestamp + 15
+
+            const unsubscribe = elekton.onBallotCreated((ballot: Ballot) => {
+                if (ballot.index === 1) {
+                    unsubscribe()
+                    done()
+                }
+            })
+
+            ballot = (await createBallot(users, startDate, endDate)) as Ballot
+        })
+
+        it("Should create a listener for the VoteAdded event", async (done) => {
+            const unsubscribe = elekton.onVoteAdded(ballot.index, (vote: number) => {
+                expect(vote).toEqual(3)
+                unsubscribe()
+                done()
+            })
+
+            await ballot.vote(users[0], 3)
+        })
+
+        it("Should create a listener for the DecryptionKeyPublished event", async (done) => {
+            const unsubscribe = elekton.onDecryptionKeyPublished(ballot.index, (decryptionKey: number) => {
+                expect(decryptionKey).toEqual(2)
+                unsubscribe()
+                done()
+            })
+
+            await delay(5000)
+
+            await ballot.publishDecryptionKey(users[0], 2)
         })
     })
 })

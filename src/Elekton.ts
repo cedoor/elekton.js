@@ -91,7 +91,7 @@ export class Elekton {
         })
     }
 
-    async retrieveBallot(index: number): Promise<Ballot | null> {
+    async retrieveBallot(index: number): Promise<Ballot> {
         const voidSigner = new VoidSigner(this.contract.address, this.contract.provider)
         const contractBallot = await this.contract.connect(voidSigner).ballots(index)
 
@@ -126,5 +126,39 @@ export class Elekton {
         }
 
         return ballots
+    }
+
+    onBallotCreated(listener: (ballot: Ballot) => void): () => void {
+        const retrieveBallot = async (ballotIndex: BigNumber) => {
+            const ballot = await this.retrieveBallot(ballotIndex.toNumber())
+
+            return listener(ballot)
+        }
+
+        this.contract.on("BallotCreated", retrieveBallot)
+
+        return this.contract.off.bind(this, "BallotCreated", retrieveBallot)
+    }
+
+    onVoteAdded(ballotIndex: number, listener: (vote: number) => void): () => void {
+        const filter = this.contract.filters.VoteAdded(ballotIndex)
+        const retrieveVote = (ballotIndex: BigNumber, vote: BigNumber) => {
+            return listener(vote.toNumber())
+        }
+
+        this.contract.on(filter, retrieveVote)
+
+        return this.contract.off.bind(this, filter, retrieveVote)
+    }
+
+    onDecryptionKeyPublished(ballotIndex: number, listener: (decryptionKey: number) => void): () => void {
+        const filter = this.contract.filters.DecryptionKeyPublished(ballotIndex)
+        const retrieveVote = (ballotIndex: BigNumber, decryptionKey: BigNumber) => {
+            return listener(decryptionKey.toNumber())
+        }
+
+        this.contract.on(filter, retrieveVote)
+
+        return this.contract.off.bind(this, filter, retrieveVote)
     }
 }
