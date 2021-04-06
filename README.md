@@ -12,12 +12,6 @@
     <a href="https://github.com/cedoor/elekton.js/blob/master/LICENSE" target="_blank">
         <img alt="Github license" src="https://img.shields.io/github/license/cedoor/elekton.js.svg?style=flat-square">
     </a>
-    <a href="https://github.com/cedoor/elekton.js/actions?query=workflow%3Atest" target="_blank">
-        <img alt="GitHub Workflow test" src="https://img.shields.io/github/workflow/status/cedoor/elekton.js/test?label=test&style=flat-square&logo=github">
-    </a>
-    <a href='https://coveralls.io/github/cedoor/elekton.js?branch=main' target="_blank">
-        <img alt="Coveralls" src="https://img.shields.io/coveralls/github/cedoor/elekton.js/main?style=flat-square&logo=coveralls">
-    </a>
     <a href="https://eslint.org/" target="_blank">
         <img alt="Linter eslint" src="https://img.shields.io/badge/linter-eslint-8080f2?style=flat-square&logo=eslint">
     </a>
@@ -25,7 +19,6 @@
         <img alt="Code style prettier" src="https://img.shields.io/badge/code%20style-prettier-f8bc45?style=flat-square&logo=prettier">
     </a>
     <img alt="Repository top language" src="https://img.shields.io/github/languages/top/cedoor/elekton.js?style=flat-square&logo=typescript">
-    <img alt="NPM bundle size" src="https://img.shields.io/bundlephobia/min/elekton?style=flat-square">
 </p>
 
 ---
