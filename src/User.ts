@@ -1,6 +1,6 @@
 import { Contract, Wallet } from "ethers"
 import { Ballot } from "./Ballot"
-import { BallotInputData, ElektonConfig, UserData, UserIpfsData } from "./types"
+import { BallotInputData, ElektonConfig, UserData } from "./types"
 import { createSparseMerkleTree, fromCidToHex } from "./utils"
 
 export class User {
@@ -40,11 +40,11 @@ export class User {
 
         const wallet = new Wallet(this.privateKey, this.contract.provider)
 
-        const tree = await createSparseMerkleTree(ballotInputData.voterPublicKeys)
+        const tree = createSparseMerkleTree(ballotInputData.voterPublicKeys)
 
         // Add ballot data to IPFS.
         const ballotIpfsData = { ...ballotInputData, adminAddress: this.address }
-        const ipfsEntry = await this.ipfs.add(Ballot.dataToString(ballotIpfsData))
+        const ipfsEntry = await this.ipfs.add(JSON.stringify(ballotIpfsData))
         const ipfsCidHex = fromCidToHex(ipfsEntry.cid)
 
         try {
@@ -66,9 +66,5 @@ export class User {
         } catch (error) {
             return null
         }
-    }
-
-    static dataToString(userIpfsData: UserIpfsData): string {
-        return JSON.stringify(userIpfsData)
     }
 }

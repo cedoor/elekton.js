@@ -1,4 +1,3 @@
-import { BallotIpfsData } from "./types/data"
 import { User } from "./User"
 import { eddsa, poseidon } from "circomlib"
 import createBlakeHash from "blake-hash"
@@ -94,9 +93,5 @@ export class Ballot {
         await tx.wait()
 
         this.decryptionKey = decryptionKey
-    }
-
-    static dataToString(ballotIpfsData: BallotIpfsData): string {
-        return JSON.stringify(ballotIpfsData)
     }
 }

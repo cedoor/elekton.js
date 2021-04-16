@@ -13,6 +13,12 @@ export function fromHexToCid(ipfsCidHex: string): string {
     return ipfsCid.toString()
 }
 
+export function decodeUint8Array(array: Uint8Array): string {
+    const utf8Decoder = new TextDecoder("utf8")
+
+    return utf8Decoder.decode(array)
+}
+
 export function fromCidToHex(ipfsCid: any | string): string {
     const { CID } = IpfsHttpClient as any
 

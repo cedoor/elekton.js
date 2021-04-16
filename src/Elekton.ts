@@ -4,7 +4,7 @@ import IpfsHttpClient from "ipfs-http-client"
 import { Ballot } from "./Ballot"
 import { BallotIpfsData, ElektonConfig, UserInputData, UserIpfsData } from "./types"
 import { User } from "./User"
-import { fromCidToHex, fromHexToCid } from "./utils"
+import { fromCidToHex, fromHexToCid, decodeUint8Array } from "./utils"
 
 export class Elekton {
     private config: ElektonConfig
@@ -27,7 +27,7 @@ export class Elekton {
 
         // Add user data to IPFS.
         const userIpfsData = { ...userInputData, address: wallet.address, voterPublicKey }
-        const ipfsEntry = await this.ipfs.add(User.dataToString(userIpfsData))
+        const ipfsEntry = await this.ipfs.add(JSON.stringify(userIpfsData))
         const ipfsCidHex = fromCidToHex(ipfsEntry.cid)
 
         try {
@@ -79,7 +79,7 @@ export class Elekton {
         }
 
         const { value } = await this.ipfs.cat(ipfsCid).next()
-        const userIpfsData: UserIpfsData = JSON.parse(value.toString())
+        const userIpfsData: UserIpfsData = JSON.parse(decodeUint8Array(value))
 
         return new User({
             ...userIpfsData,
@@ -97,7 +97,7 @@ export class Elekton {
 
         const ipfsCid = fromHexToCid(contractBallot.data)
         const { value } = await this.ipfs.cat(ipfsCid).next()
-        const ballotIpfsData = JSON.parse(value.toString()) as BallotIpfsData
+        const ballotIpfsData = JSON.parse(decodeUint8Array(value)) as BallotIpfsData
 
         return new Ballot({
             ...ballotIpfsData,
