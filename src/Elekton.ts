@@ -91,6 +91,24 @@ export class Elekton {
         })
     }
 
+    async retrieveUsers(last = 5): Promise<User[]> {
+        const filter = this.contract.filters.UserCreated()
+        const userEvents = await this.contract.queryFilter(filter)
+        const users: User[] = []
+
+        if (userEvents.length < last) {
+            last = userEvents.length
+        }
+
+        for (let i = userEvents.length - 1; i >= userEvents.length - last; i--) {
+            const eventArgs = userEvents[i].args as any
+
+            users.push((await this.retrieveUser(eventArgs._address)) as User)
+        }
+
+        return users
+    }
+
     async retrieveBallot(index: number): Promise<Ballot> {
         const voidSigner = new VoidSigner(this.contract.address, this.contract.provider)
         const contractBallot = await this.contract.connect(voidSigner).ballots(index)
@@ -119,10 +137,10 @@ export class Elekton {
             last = ballotEvents.length
         }
 
-        for (let i = 0; i < last; i++) {
-            const index = ballotEvents.length - last + i
+        for (let i = ballotEvents.length - 1; i >= ballotEvents.length - last; i--) {
+            const eventArgs = ballotEvents[i].args as any
 
-            ballots.push((await this.retrieveBallot(index)) as Ballot)
+            ballots.push((await this.retrieveBallot(eventArgs._index.toNumber())) as Ballot)
         }
 
         return ballots

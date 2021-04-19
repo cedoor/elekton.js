@@ -84,6 +84,15 @@ describe("Elekton", () => {
         })
     })
 
+    describe("Retrieve users", () => {
+        it("Should retrieve the last user", async () => {
+            const users = await elekton.retrieveUsers(1)
+
+            expect(users.length).toBe(1)
+            expect(users[0]).not.toBeNull()
+        })
+    })
+
     describe("Retrieve a ballot", () => {
         it("Should retrieve an existent ballot", async () => {
             const users = await createUsers(elekton)
@@ -100,10 +109,11 @@ describe("Elekton", () => {
     })
 
     describe("Retrieve ballots", () => {
-        it("Should retrieve 1 ballot", async () => {
+        it("Should retrieve a ballot", async () => {
             const ballots = await elekton.retrieveBallots()
 
             expect(ballots.length).toBe(1)
+            expect(ballots[0]).not.toBeNull()
         })
     })
 
