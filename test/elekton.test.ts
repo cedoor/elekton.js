@@ -100,6 +100,21 @@ describe("Elekton", () => {
         })
     })
 
+    describe("Add user event listeners", () => {
+        it("Should create a listener for the UserCreated event", async (done) => {
+            const unsubscribe = elekton.onUserCreated((user: User) => {
+                expect(user.name).toEqual("name2")
+                unsubscribe()
+                done()
+            })
+
+            await elekton.createUser({
+                name: "name2",
+                surname: "surname2"
+            })
+        })
+    })
+
     describe("Add ballot event listeners", () => {
         let users: User[]
         let ballot: Ballot
@@ -114,10 +129,9 @@ describe("Elekton", () => {
             const endDate = timestamp + 15
 
             const unsubscribe = elekton.onBallotCreated((ballot: Ballot) => {
-                if (ballot.index === 1) {
-                    unsubscribe()
-                    done()
-                }
+                expect(ballot.index).toEqual(1)
+                unsubscribe()
+                done()
             })
 
             ballot = (await createBallot(users, startDate, endDate)) as Ballot

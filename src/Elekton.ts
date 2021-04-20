@@ -149,37 +149,49 @@ export class Elekton {
         return ballots
     }
 
+    onUserCreated(listener: (user: User) => void): () => void {
+        const retrieveUser = async (userAddress: string) => {
+            const user = (await this.retrieveUser(userAddress)) as User
+
+            listener(user)
+        }
+
+        this.contract.on("UserCreated", retrieveUser)
+
+        return this.contract.off.bind(this.contract, "UserCreated", retrieveUser)
+    }
+
     onBallotCreated(listener: (ballot: Ballot) => void): () => void {
         const retrieveBallot = async (ballotIndex: BigNumber) => {
             const ballot = await this.retrieveBallot(ballotIndex.toNumber())
 
-            return listener(ballot)
+            listener(ballot)
         }
 
         this.contract.on("BallotCreated", retrieveBallot)
 
-        return this.contract.off.bind(this, "BallotCreated", retrieveBallot)
+        return this.contract.off.bind(this.contract, "BallotCreated", retrieveBallot)
     }
 
     onVoteAdded(ballotIndex: number, listener: (vote: number) => void): () => void {
         const filter = this.contract.filters.VoteAdded(ballotIndex)
         const retrieveVote = (ballotIndex: BigNumber, vote: BigNumber) => {
-            return listener(vote.toNumber())
+            listener(vote.toNumber())
         }
 
         this.contract.on(filter, retrieveVote)
 
-        return this.contract.off.bind(this, filter, retrieveVote)
+        return this.contract.off.bind(this.contract, filter, retrieveVote)
     }
 
     onDecryptionKeyPublished(ballotIndex: number, listener: (decryptionKey: number) => void): () => void {
         const filter = this.contract.filters.DecryptionKeyPublished(ballotIndex)
         const retrieveVote = (ballotIndex: BigNumber, decryptionKey: BigNumber) => {
-            return listener(decryptionKey.toNumber())
+            listener(decryptionKey.toNumber())
         }
 
         this.contract.on(filter, retrieveVote)
 
-        return this.contract.off.bind(this, filter, retrieveVote)
+        return this.contract.off.bind(this.contract, filter, retrieveVote)
     }
 }
