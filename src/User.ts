@@ -39,21 +39,21 @@ export class User {
         }
 
         const wallet = new Wallet(this.privateKey, this.contract.provider)
-
         const tree = createSparseMerkleTree(ballotInputData.voterPublicKeys)
-
-        // Add ballot data to IPFS.
         const ballotIpfsData = { ...ballotInputData, adminAddress: this.address }
         const ipfsEntry = await this.ipfs.add(JSON.stringify(ballotIpfsData))
         const ipfsCidHex = fromCidToHex(ipfsEntry.cid)
 
         try {
-            const tx = await this.contract
-                .connect(wallet)
-                .createBallot(ipfsCidHex, tree.root, ballotInputData.startDate, ballotInputData.endDate)
-
-            const txReceipt = await tx.wait()
-            const index = txReceipt.events[0].args._index.toNumber()
+            const contract = this.contract.connect(wallet)
+            const transaction = await contract.createBallot(
+                ipfsCidHex,
+                tree.root,
+                ballotInputData.startDate,
+                ballotInputData.endDate
+            )
+            const receipt = await transaction.wait()
+            const index = receipt.events[0].args._index.toNumber()
 
             return new Ballot({
                 ...ballotIpfsData,

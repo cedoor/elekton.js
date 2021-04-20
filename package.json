@@ -51,7 +51,7 @@
         ]
     },
     "jest": {
-        "testTimeout": 20000,
+        "testTimeout": 40000,
         "transform": {
             ".(ts|tsx)": "ts-jest"
         },

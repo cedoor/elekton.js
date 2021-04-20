@@ -19,8 +19,8 @@ export class Elekton {
         this.ipfs = IpfsHttpClient({ url: elektonConfig.ipfsProvider || "http://localhost:5001" })
     }
 
-    async createUser(privateKey: string, userInputData: UserInputData): Promise<User | null> {
-        const wallet = new Wallet(privateKey, this.contract.provider)
+    async createUser(userInputData: UserInputData): Promise<User | null> {
+        const wallet = Wallet.createRandom().connect(this.contract.provider)
 
         const voterPrivateKeyBuffer = Buffer.from(utils.randomBytes(32))
         const voterPublicKey = `0x${babyJub.packPoint(eddsa.prv2pub(voterPrivateKeyBuffer)).toString("hex")}`
@@ -31,7 +31,10 @@ export class Elekton {
         const ipfsCidHex = fromCidToHex(ipfsEntry.cid)
 
         try {
-            await this.contract.connect(wallet).createUser(ipfsCidHex)
+            const contract = this.contract.connect(wallet)
+            const transaction = await contract.createUser(ipfsCidHex)
+
+            await transaction.wait()
 
             return new User({
                 ...userIpfsData,
@@ -39,7 +42,7 @@ export class Elekton {
                 ipfs: this.ipfs,
                 config: this.config,
                 ipfsCid: ipfsEntry.cid.toString(),
-                privateKey,
+                privateKey: wallet.privateKey,
                 voterPrivateKey: BigNumber.from(voterPrivateKeyBuffer).toHexString()
             })
         } catch (error) {

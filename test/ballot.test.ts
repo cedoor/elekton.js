@@ -31,8 +31,6 @@ describe("Ballot", () => {
             ballot = (await createBallot(users, startDate, endDate)) as Ballot
             const vote = 3
 
-            await delay(5000)
-
             await ballot.vote(users[0], vote)
 
             expect(ballot.votes[0]).toBe(vote)

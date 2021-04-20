@@ -4,18 +4,12 @@ import { connect } from "../src"
 import { Ballot } from "../src/Ballot"
 import { Elekton } from "../src/Elekton"
 import { User } from "../src/User"
-import {
-    createBallot,
-    createUsers,
-    delay,
-    deployElektonContract,
-    getLastBlockTimestamp,
-    userPrivateKeys
-} from "./utils"
+import { createBallot, createUsers, delay, deployElektonContract, getLastBlockTimestamp } from "./utils"
 
 describe("Elekton", () => {
     let contract: Contract
     let elekton: Elekton
+    let user: User
 
     describe("Connect to providers", () => {
         it("Should return an Elekton instance", async () => {
@@ -34,7 +28,7 @@ describe("Elekton", () => {
 
     describe("Create a user", () => {
         it("Should create a user", async () => {
-            const user = (await elekton.createUser(userPrivateKeys[0], {
+            user = (await elekton.createUser({
                 name: "name",
                 surname: "surname"
             })) as User
@@ -42,27 +36,17 @@ describe("Elekton", () => {
             expect(user.name).toBe("name")
             expect(user.surname).toBe("surname")
         })
-
-        it("Should update user data", async () => {
-            const user = (await elekton.createUser(userPrivateKeys[0], {
-                name: "name2",
-                surname: "surname2"
-            })) as User
-
-            expect(user.name).toBe("name2")
-            expect(user.surname).toBe("surname2")
-        })
     })
 
     describe("Retrieve a user", () => {
         it("Should retrieve an existent user", async () => {
-            const user = (await elekton.retrieveUser(userPrivateKeys[0])) as User
+            const existingUser = (await elekton.retrieveUser(user.privateKey as string)) as User
 
-            expect(user.address).not.toBeUndefined()
-            expect(user.voterPublicKey).not.toBeUndefined()
-            expect(user.name).toBe("name2")
-            expect(user.surname).toBe("surname2")
-            expect(user.privateKey).toBe(userPrivateKeys[0])
+            expect(existingUser.address).not.toBeUndefined()
+            expect(existingUser.voterPublicKey).not.toBeUndefined()
+            expect(existingUser.name).toBe("name")
+            expect(existingUser.surname).toBe("surname")
+            expect(existingUser.privateKey).toBe(user.privateKey)
         })
 
         it("Should not retrieve an non-existent user", async () => {
@@ -73,14 +57,13 @@ describe("Elekton", () => {
         })
 
         it("Should retrieve a user by address", async () => {
-            const wallet = new Wallet(userPrivateKeys[0])
-            const user = (await elekton.retrieveUser(wallet.address)) as User
+            const existingUser = (await elekton.retrieveUser(user.address as string)) as User
 
-            expect(user.address).not.toBeUndefined()
-            expect(user.voterPublicKey).not.toBeUndefined()
-            expect(user.name).toBe("name2")
-            expect(user.surname).toBe("surname2")
-            expect(user.privateKey).toBeUndefined()
+            expect(existingUser.address).not.toBeUndefined()
+            expect(existingUser.voterPublicKey).not.toBeUndefined()
+            expect(existingUser.name).toBe("name")
+            expect(existingUser.surname).toBe("surname")
+            expect(existingUser.privateKey).toBeUndefined()
         })
     })
 
