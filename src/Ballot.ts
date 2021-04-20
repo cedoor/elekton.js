@@ -76,9 +76,8 @@ export class Ballot {
             this.config.wasmFilePath,
             this.config.zkeyFilePath
         )
-        const wallet = new Wallet(user.privateKey as string, this.contract.provider)
-        const contract = this.contract.connect(wallet)
-        const transaction = await contract.vote(...proofParameters)
+
+        const transaction = await this.contract.vote(...proofParameters)
 
         await transaction.wait()
 

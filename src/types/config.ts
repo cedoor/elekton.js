@@ -5,6 +5,7 @@ export interface ElektonConfig {
     contractInterface: ContractInterface
     wasmFilePath: string
     zkeyFilePath: string
+    universalPrivateKey?: string
     ethereumProvider?: string
     ipfsProvider?: string
 }

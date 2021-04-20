@@ -12,11 +12,15 @@ export class Elekton {
     private ipfs: any
 
     constructor(elektonConfig: ElektonConfig) {
-        const provider = new providers.JsonRpcProvider(elektonConfig.ethereumProvider || "http://localhost:8545")
-
-        this.config = elektonConfig
-        this.contract = new Contract(elektonConfig.contractAddress, elektonConfig.contractInterface, provider)
         this.ipfs = IpfsHttpClient({ url: elektonConfig.ipfsProvider || "http://localhost:5001" })
+        const provider = new providers.JsonRpcProvider(elektonConfig.ethereumProvider || "http://localhost:8545")
+        const wallet = new Wallet(
+            elektonConfig.universalPrivateKey || "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+            provider
+        )
+
+        this.contract = new Contract(elektonConfig.contractAddress, elektonConfig.contractInterface, wallet)
+        this.config = elektonConfig
     }
 
     async createUser(userInputData: UserInputData): Promise<User | null> {
