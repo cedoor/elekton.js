@@ -4,7 +4,7 @@ import IpfsHttpClient from "ipfs-http-client"
 import { Ballot } from "./Ballot"
 import { BallotIpfsData, ElektonConfig, UserInputData, UserIpfsData } from "./types"
 import { User } from "./User"
-import { fromCidToHex, fromHexToCid, decodeUint8Array } from "./utils"
+import { fromCidToHex, fromHexToCid, decodeUint8Array, isWebSocketURL } from "./utils"
 
 export class Elekton {
     private config: ElektonConfig
@@ -13,7 +13,10 @@ export class Elekton {
 
     constructor(elektonConfig: ElektonConfig) {
         this.ipfs = IpfsHttpClient({ url: elektonConfig.ipfsProvider || "http://localhost:5001" })
-        const provider = new providers.JsonRpcProvider(elektonConfig.ethereumProvider || "http://localhost:8545")
+        elektonConfig.ethereumProvider = elektonConfig.ethereumProvider || "ws://localhost:8546"
+        const provider = isWebSocketURL(elektonConfig.ethereumProvider)
+            ? new providers.WebSocketProvider(elektonConfig.ethereumProvider)
+            : new providers.JsonRpcProvider(elektonConfig.ethereumProvider)
         const wallet = new Wallet(
             elektonConfig.universalPrivateKey || "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
             provider

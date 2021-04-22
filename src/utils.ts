@@ -73,3 +73,7 @@ export function fromBigNumberToBytes32(n: any) {
 
     return utils.hexZeroPad(hex, 32)
 }
+
+export function isWebSocketURL(url: string): boolean {
+    return new URL(url).protocol === "ws:"
+}
