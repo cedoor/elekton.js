@@ -1,7 +1,10 @@
 import { Contract, Wallet } from "ethers"
 import { Ballot } from "./Ballot"
+import { Scalar, utils } from "ffjavascript"
 import { BallotInputData, ElektonConfig, UserData } from "./types"
-import { createSparseMerkleTree, fromCidToHex } from "./utils"
+import { eddsa, poseidon } from "circomlib"
+import createBlakeHash from "blake-hash"
+import { createSparseMerkleTree, fromCidToHex, hexToBuffer } from "./utils"
 
 export class User {
     private config: ElektonConfig
@@ -66,5 +69,20 @@ export class User {
         } catch (error) {
             return null
         }
+    }
+
+    async hasVotedTwice(ballotIndex: number): Promise<boolean | null> {
+        if (!this.voterPrivateKey || !this.privateKey) {
+            return null
+        }
+
+        const blakeHash = createBlakeHash("blake512").update(hexToBuffer(this.voterPrivateKey)).digest()
+        const sBuff = eddsa.pruneBuffer(blakeHash.slice(0, 32))
+        const s = utils.leBuff2int(sBuff)
+        const ppk = Scalar.shr(s, 3)
+        const voteNullifier = poseidon([ballotIndex, ppk])
+        const wallet = new Wallet(this.privateKey, this.contract.provider)
+
+        return this.contract.connect(wallet).voteNullifier(voteNullifier)
     }
 }

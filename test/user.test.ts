@@ -8,8 +8,7 @@ describe("User", () => {
     let contract: Contract
     let elekton: Elekton
     let users: User[]
-
-    const ballots: Ballot[] = []
+    let ballot: Ballot
 
     beforeAll(async () => {
         contract = await deployElektonContract()
@@ -24,10 +23,10 @@ describe("User", () => {
             const description = "This is a ballot description"
             const proposals = ["Yes", "No"]
             const voterPublicKeys = users.map((user) => user.voterPublicKey)
-            const startDate = timestamp + 600
-            const endDate = timestamp + 700
+            const startDate = timestamp + 2
+            const endDate = timestamp + 70
 
-            const ballot = (await users[0].createBallot({
+            ballot = (await users[0].createBallot({
                 name,
                 description,
                 proposals,
@@ -38,8 +37,21 @@ describe("User", () => {
 
             expect(ballot).toBeInstanceOf(Ballot)
             expect(ballot.ipfsCid).not.toBeNull()
+        })
+    })
 
-            ballots.push(ballot)
+    describe("Check user vote", () => {
+        it("Should check if a user has voted twice and should return false", async () => {
+            const hasVotedTwice = await users[0].hasVotedTwice(ballot.index)
+
+            expect(hasVotedTwice).toBeFalsy()
+        })
+
+        it("Should check if a user has voted twice and should return true", async () => {
+            await ballot.vote(users[0], 3)
+            const hasVotedTwice = await users[0].hasVotedTwice(ballot.index)
+
+            expect(hasVotedTwice).toBeTruthy()
         })
     })
 })
