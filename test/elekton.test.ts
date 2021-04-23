@@ -117,7 +117,6 @@ describe("Elekton", () => {
 
     describe("Add ballot event listeners", () => {
         let users: User[]
-        let ballot: Ballot
 
         beforeAll(async () => {
             users = await createUsers(elekton)
@@ -134,29 +133,7 @@ describe("Elekton", () => {
                 done()
             })
 
-            ballot = (await createBallot(users, startDate, endDate)) as Ballot
-        })
-
-        it("Should create a listener for the VoteAdded event", async (done) => {
-            const unsubscribe = elekton.onVoteAdded(ballot.index, (vote: number) => {
-                expect(vote).toEqual(3)
-                unsubscribe()
-                done()
-            })
-
-            await ballot.vote(users[0], 3)
-        })
-
-        it("Should create a listener for the DecryptionKeyPublished event", async (done) => {
-            const unsubscribe = elekton.onDecryptionKeyPublished(ballot.index, (decryptionKey: number) => {
-                expect(decryptionKey).toEqual(2)
-                unsubscribe()
-                done()
-            })
-
-            await delay(5000)
-
-            await ballot.publishDecryptionKey(users[0], 2)
+            await createBallot(users, startDate, endDate)
         })
     })
 })

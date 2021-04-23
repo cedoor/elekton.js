@@ -26,7 +26,7 @@ describe("Ballot", () => {
     describe("Vote", () => {
         it("Should vote in a ballot anonymously", async () => {
             const timestamp = await getLastBlockTimestamp(contract.provider)
-            const startDate = timestamp + 5
+            const startDate = timestamp + 2
             const endDate = timestamp + 15
             ballot = (await createBallot(users, startDate, endDate)) as Ballot
             const vote = 3
@@ -41,10 +41,56 @@ describe("Ballot", () => {
         it("Should publish a ballot decryption key", async () => {
             const decryptionKey = 3
 
-            await delay(6000)
+            await delay(10000)
             await ballot.publishDecryptionKey(users[0], decryptionKey)
 
             expect(ballot.decryptionKey).toBe(decryptionKey)
+        })
+    })
+
+    describe("Retrieve votes", () => {
+        it("Should retrieve the ballot votes", async () => {
+            const votes = await ballot.retrieveVotes()
+
+            expect(votes.length).toBe(1)
+            expect(votes[0]).toBe(3)
+        })
+    })
+
+    describe("Add ballot event listeners", () => {
+        let users: User[]
+        let ballot: Ballot
+
+        beforeAll(async () => {
+            users = await createUsers(elekton)
+
+            const timestamp = await getLastBlockTimestamp(contract.provider)
+            const startDate = timestamp + 2
+            const endDate = timestamp + 15
+
+            ballot = (await createBallot(users, startDate, endDate)) as Ballot
+        })
+
+        it("Should create a listener for the VoteAdded event", async (done) => {
+            const unsubscribe = ballot.onVoteAdded((vote: number) => {
+                expect(vote).toEqual(3)
+                unsubscribe()
+                done()
+            })
+
+            await ballot.vote(users[0], 3)
+        })
+
+        it("Should create a listener for the DecryptionKeyPublished event", async (done) => {
+            const unsubscribe = ballot.onDecryptionKeyPublished((decryptionKey: number) => {
+                expect(decryptionKey).toEqual(2)
+                unsubscribe()
+                done()
+            })
+
+            await delay(10000)
+
+            await ballot.publishDecryptionKey(users[0], 2)
         })
     })
 })

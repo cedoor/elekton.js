@@ -2,7 +2,7 @@ import { User } from "./User"
 import { eddsa, poseidon } from "circomlib"
 import createBlakeHash from "blake-hash"
 import { Scalar, utils } from "ffjavascript"
-import { Contract, Wallet } from "ethers"
+import { BigNumber, Contract, Wallet } from "ethers"
 import { BallotData, ElektonConfig } from "./types"
 import { createSparseMerkleTree, unpackVoterPublicKey, hexToBuffer, getProofParameters } from "./utils"
 
@@ -91,5 +91,45 @@ export class Ballot {
         await tx.wait()
 
         this.decryptionKey = decryptionKey
+    }
+
+    async retrieveVotes(last = Infinity): Promise<number[]> {
+        const filter = this.contract.filters.VoteAdded(this.index)
+        const voteEvents = await this.contract.queryFilter(filter)
+        const votes: number[] = []
+
+        if (voteEvents.length < last) {
+            last = voteEvents.length
+        }
+
+        for (let i = voteEvents.length - 1; i >= voteEvents.length - last; i--) {
+            const eventArgs = voteEvents[i].args as any
+
+            votes.push(eventArgs._vote.toNumber())
+        }
+
+        return votes
+    }
+
+    onVoteAdded(listener: (vote: number, ballotIndex: number) => void): () => void {
+        const filter = this.contract.filters.VoteAdded(this.index)
+        const retrieveVote = (ballotIndex: BigNumber, vote: BigNumber) => {
+            listener(vote.toNumber(), ballotIndex.toNumber())
+        }
+
+        this.contract.on(filter, retrieveVote)
+
+        return this.contract.off.bind(this.contract, filter, retrieveVote)
+    }
+
+    onDecryptionKeyPublished(listener: (decryptionKey: number, ballotIndex: number) => void): () => void {
+        const filter = this.contract.filters.DecryptionKeyPublished(this.index)
+        const retrieveVote = (ballotIndex: BigNumber, decryptionKey: BigNumber) => {
+            listener(decryptionKey.toNumber(), ballotIndex.toNumber())
+        }
+
+        this.contract.on(filter, retrieveVote)
+
+        return this.contract.off.bind(this.contract, filter, retrieveVote)
     }
 }

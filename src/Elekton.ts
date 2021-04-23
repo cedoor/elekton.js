@@ -101,7 +101,7 @@ export class Elekton {
         })
     }
 
-    async retrieveUsers(last = 5): Promise<User[]> {
+    async retrieveUsers(last = Infinity): Promise<User[]> {
         const filter = this.contract.filters.UserCreated()
         const userEvents = await this.contract.queryFilter(filter)
         const users: User[] = []
@@ -138,7 +138,7 @@ export class Elekton {
         })
     }
 
-    async retrieveBallots(last = 5): Promise<Ballot[]> {
+    async retrieveBallots(last = Infinity): Promise<Ballot[]> {
         const filter = this.contract.filters.BallotCreated()
         const ballotEvents = await this.contract.queryFilter(filter)
         const ballots: Ballot[] = []
@@ -178,27 +178,5 @@ export class Elekton {
         this.contract.on("BallotCreated", retrieveBallot)
 
         return this.contract.off.bind(this.contract, "BallotCreated", retrieveBallot)
-    }
-
-    onVoteAdded(ballotIndex: number, listener: (vote: number) => void): () => void {
-        const filter = this.contract.filters.VoteAdded(ballotIndex)
-        const retrieveVote = (ballotIndex: BigNumber, vote: BigNumber) => {
-            listener(vote.toNumber())
-        }
-
-        this.contract.on(filter, retrieveVote)
-
-        return this.contract.off.bind(this.contract, filter, retrieveVote)
-    }
-
-    onDecryptionKeyPublished(ballotIndex: number, listener: (decryptionKey: number) => void): () => void {
-        const filter = this.contract.filters.DecryptionKeyPublished(ballotIndex)
-        const retrieveVote = (ballotIndex: BigNumber, decryptionKey: BigNumber) => {
-            listener(decryptionKey.toNumber())
-        }
-
-        this.contract.on(filter, retrieveVote)
-
-        return this.contract.off.bind(this.contract, filter, retrieveVote)
     }
 }
