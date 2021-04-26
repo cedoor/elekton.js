@@ -24,27 +24,24 @@ describe("Ballot", () => {
     })
 
     describe("Vote", () => {
-        it("Should vote in a ballot anonymously", async () => {
+        it("Should vote in a ballot anonymously without errors", async () => {
             const timestamp = await getLastBlockTimestamp(contract.provider)
             const startDate = timestamp + 2
-            const endDate = timestamp + 15
-            ballot = (await createBallot(users, startDate, endDate)) as Ballot
+            const endDate = timestamp + 10
             const vote = 3
+            ballot = (await createBallot(users, startDate, endDate)) as Ballot
 
-            await ballot.vote(users[0], vote)
-
-            expect(ballot.votes[0]).toBe(vote)
+            expect(await ballot.vote(users[0], vote)).not.toBeNull()
         })
     })
 
     describe("Publish decryption key", () => {
-        it("Should publish a ballot decryption key", async () => {
+        it("Should publish a ballot decryption key without errors", async () => {
             const decryptionKey = 3
 
             await delay(10000)
-            await ballot.publishDecryptionKey(users[0], decryptionKey)
 
-            expect(ballot.decryptionKey).toBe(decryptionKey)
+            expect(await ballot.publishDecryptionKey(users[0], decryptionKey)).not.toBeNull()
         })
     })
 
