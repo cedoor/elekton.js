@@ -38,6 +38,4 @@ export interface BallotData extends BallotIpfsData {
     contract: Contract
     index: number
     ipfsCid: string
-    votes: number[]
-    decryptionKey?: number
 }

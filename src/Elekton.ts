@@ -132,9 +132,7 @@ export class Elekton {
             contract: this.contract,
             config: this.config,
             index,
-            ipfsCid,
-            votes: contractBallot.votes || [],
-            decryptionKey: contractBallot.decryptionKey
+            ipfsCid
         })
     }
 

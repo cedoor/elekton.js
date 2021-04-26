@@ -63,8 +63,7 @@ export class User {
                 contract: this.contract,
                 config: this.config,
                 index,
-                ipfsCid: ipfsEntry.cid.toString(),
-                votes: []
+                ipfsCid: ipfsEntry.cid.toString()
             })
         } catch (error) {
             return null
