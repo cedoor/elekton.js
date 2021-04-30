@@ -1,11 +1,28 @@
 <p align="center">
-    <h1 align="center">
-        ElektonJS 
-    </h1>
-    <p align="center">Elekton.js library to interact with all back-end components.</p>
+    <a href="https://github.com/cedoor/elekton-contracts" target="_blank">
+        elekton-contracts
+    </a>
+    | 
+    <a href="https://github.com/cedoor/elekton.js" target="_blank">
+        elekton.js
+    </a>
+    | 
+    <a href="https://github.com/cedoor/elekton-dapp" target="_blank">
+        elekton-dapp
+    </a>
 </p>
 
 <p align="center">
+    <h1 align="center">
+        ElektonJS
+    </h1>
+    <p align="center">A simple JS library to interact with the Elekton smart contract and IPFS.</p>
+</p>
+
+<p align="center">
+    <a href="https://github.com/cedoor/elekton.js" target="_blank">
+        <img src="https://img.shields.io/badge/project-Elekton-blue.svg?style=flat-square">
+    </a>
     <a href="https://www.npmjs.com/package/elekton" target="_blank">
         <img alt="NPM version" src="https://img.shields.io/npm/v/elekton?style=flat-square">
     </a>
@@ -20,6 +37,10 @@
     </a>
     <img alt="Repository top language" src="https://img.shields.io/github/languages/top/cedoor/elekton.js?style=flat-square&logo=typescript">
 </p>
+
+ElektonJS is a library written in TypeScript which allow you to create Elekton users, ballots and to vote anonymously by interacting with the Elekton smart contract and IPFS.
+
+**Notice:** This library build is a CommonJS module and it has only been used and tested with the [`create-react-app`](https://create-react-app.dev/) scripts, which convert the Node.js modules in order to make the library compatible with browsers.
 
 ---
 
@@ -49,20 +70,6 @@ or with yarn:
 
 ```bash
 yarn add elekton
-```
-
-### CDN
-
-You can also load it using a `script` tap using [unpkg](https://unpkg.com/):
-
-```html
-<script src="https://unpkg.com/elekton/"></script>
-```
-
-or [JSDelivr](https://www.jsdelivr.com/):
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/elekton/"></script>
 ```
 
 ## Usage
