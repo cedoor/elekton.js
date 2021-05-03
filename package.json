@@ -1,7 +1,7 @@
 {
     "name": "elekton",
     "version": "0.1.0",
-    "description": "Elekton.js library to interact with all back-end components.",
+    "description": "A simple JS library to interact with the Elekton smart contracts and IPFS.",
     "keywords": [
         "elekton",
         "typescript",
