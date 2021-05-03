@@ -16,7 +16,7 @@
     <h1 align="center">
         ElektonJS
     </h1>
-    <p align="center">A simple JS library to interact with the Elekton smart contract and IPFS.</p>
+    <p align="center">A simple JS library to interact with the Elekton smart contracts and IPFS.</p>
 </p>
 
 <p align="center">
@@ -38,16 +38,16 @@
     <img alt="Repository top language" src="https://img.shields.io/github/languages/top/cedoor/elekton.js?style=flat-square&logo=typescript">
 </p>
 
-ElektonJS is a library written in TypeScript which allow you to create Elekton users, ballots and to vote anonymously by interacting with the Elekton smart contract and IPFS.
+Elekton is a set of modules useful to create a simple e-voting system that uses non-interactive zero-knowledge proofs and blockchain technologies to allow users to vote anonymously in a verifiable and transparent way. In addition to this repository there are the Elekton [contracts](https://github.com/cedoor/elekton-contracts) and a simple [DApp](https://github.com/cedoor/elekton-dapp), which in turn uses elekton.js and allows you to create users, ballots and to vote anonymously.
 
-**Notice:** This library build is a CommonJS module and it has only been used and tested with the [`create-react-app`](https://create-react-app.dev/) scripts, which convert the Node.js modules in order to make the library compatible with browsers.
+**Notice:** The build of this library is a CommonJS module and it has only been used and tested with the [`create-react-app`](https://create-react-app.dev/) scripts, which convert the Node.js modules in order to make the library compatible with browsers.
 
 ---
 
 ## Table of Contents
 
 -   🛠 [Install](#install)
--   🕹 [Usage](#usage)
+-   📜 [API reference](#api-reference)
 -   🔬 Development
     -   Rules
         -   [Commits](https://github.com/cedoor/cedoor/tree/main/git#commits-rules)
@@ -72,9 +72,90 @@ or with yarn:
 yarn add elekton
 ```
 
-## Usage
 
-TODO
+## API reference
+
+-   [Connecting to backend components](#elekton-connect)
+-   [Creating users](#elekton-create-user)
+-   [Retrieving single users](#elekton-retrieve-user)
+-   [Retrieving more users](#elekton-retrieve-users)
+-   [Retrieving single ballots](#elekton-retrieve-ballot)
+-   [Retrieving more ballots](#elekton-retrieve-ballots)
+-   [Creating ballots](#elekton-user-create-ballot)
+-   [Voting on ballots](#elekton-ballot-vote)
+
+<a name="elekton-connect" href="#elekton-connect">#</a> **connect**(elektonConfig: [_ElektonConfig_](https://github.com/cedoor/elekton.js/blob/main/src/types/config.ts)): _Elekton_
+
+```typescript
+import { connect } from "elekton"
+import { abi as contractInterface } from "./contracts/Elekton.json"
+
+const elekton = connect({
+    contractAddress: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    contractInterface,
+    wasmFilePath: "https://localhost:3000/main.wasm",
+    zkeyFilePath: "https://localhost:3000/circuit_final.zkey"
+})
+```
+
+<a name="elekton-create-user" href="#elekton-create-user">#</a> **elekton.createUser**(userInputData: _UserInputData_): _Promise<User | null>_
+
+```typescript
+const user = elekton.createUser({
+    name: "Elon",
+    username: "Musk"
+})
+```
+
+<a name="elekton-retrieve-user" href="#elekton-retrieve-user">#</a> **elekton.retrieveUser**(privateKeyOrAddressOrIpfsCid: _string_): _Promise<User | null>_
+
+```typescript
+const user = elekton.retrieveUser("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")
+```
+
+<a name="elekton-retrieve-users" href="#elekton-retrieve-users">#</a> **elekton.retrieveUsers**(last: _number_): _Promise<User[]>_
+
+```typescript
+const [lastUser] = elekton.retrieveUsers(1)
+```
+
+<a name="elekton-retrieve-ballot" href="#elekton-retrieve-ballot">#</a> **elekton.retrieveBallot**(index: _number_): _Promise\<Ballot>_
+
+```typescript
+const ballot = elekton.retrieveBallot(0)
+```
+
+<a name="elekton-retrieve-ballots" href="#elekton-retrieve-ballots">#</a> **elekton.retrieveBallots**(last: _number_): _Promise<Ballot[]>_
+
+```typescript
+const [lastBallot] = elekton.retrieveBallots(1)
+```
+
+<a name="elekton-user-create-ballot" href="#elekton-user-create-ballot">#</a> **user.createBallot**(ballotInputData: _BallotInputData_): _Promise<Ballot | null>_
+
+```typescript
+const ballot = user.createBallot({
+    name: "County elections",
+    description: "Which hobbit do you want to vote for?",
+    proposals: ["Frodo Baggins", "Samwise Gamgee", "Pippin Took", "Merry Brandybuck"],
+    voterPublicKeys: [
+        "0xb5c911b55d3abf84e4cd1309fa8a9ec26a5a079c11935b96af1656fd514eaf02",
+        "0x0d5d375a178dad0b3073ff3d5df223c0dc2840e4b417985c87bab671cd50c10d",
+        "0xd99c2e06fef7db1dd4b96c3afccd36460bfd37e3bd93b1ad4fe7542f2b0ff090",
+        "0xbd43d085e1fcb553d9bce5dd4bb5e399ff4ccbc3d73d89a7826c9f30a6d58915",
+        "0x9b2b17399a99664e2f2a0222e3a06ff13ef5cab99324803ad2b1f7124a83a8a4",
+        "0x22e6c85ac522f2e2529789e4c80873630472883309b8e6539ed7b3fff1fb4a8a"
+    ],
+    startDate: 1620038490,
+    endDate: 1620138490
+})
+```
+
+<a name="elekton-ballot-vote" href="#elekton-ballot-vote">#</a> **ballot.vote**(user: _User_, vote: _number_): _Promise<void | null>_
+
+```typescript
+ballot.vote(user, 2)
+```
 
 ## Contacts
 
