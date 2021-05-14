@@ -101,7 +101,7 @@ const elekton = connect({
 <a name="elekton-create-user" href="#elekton-create-user">#</a> **elekton.createUser**(userInputData: _UserInputData_): _Promise<User | null>_
 
 ```typescript
-const user = elekton.createUser({
+const user = await elekton.createUser({
     name: "Elon",
     username: "Musk"
 })
@@ -110,31 +110,31 @@ const user = elekton.createUser({
 <a name="elekton-retrieve-user" href="#elekton-retrieve-user">#</a> **elekton.retrieveUser**(privateKeyOrAddressOrIpfsCid: _string_): _Promise<User | null>_
 
 ```typescript
-const user = elekton.retrieveUser("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")
+const user = await elekton.retrieveUser("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")
 ```
 
 <a name="elekton-retrieve-users" href="#elekton-retrieve-users">#</a> **elekton.retrieveUsers**(last: _number_): _Promise<User[]>_
 
 ```typescript
-const [lastUser] = elekton.retrieveUsers(1)
+const [lastUser] = await elekton.retrieveUsers(1)
 ```
 
 <a name="elekton-retrieve-ballot" href="#elekton-retrieve-ballot">#</a> **elekton.retrieveBallot**(index: _number_): _Promise\<Ballot>_
 
 ```typescript
-const ballot = elekton.retrieveBallot(0)
+const ballot = await elekton.retrieveBallot(0)
 ```
 
 <a name="elekton-retrieve-ballots" href="#elekton-retrieve-ballots">#</a> **elekton.retrieveBallots**(last: _number_): _Promise<Ballot[]>_
 
 ```typescript
-const [lastBallot] = elekton.retrieveBallots(1)
+const [lastBallot] = await elekton.retrieveBallots(1)
 ```
 
 <a name="elekton-user-create-ballot" href="#elekton-user-create-ballot">#</a> **user.createBallot**(ballotInputData: _BallotInputData_): _Promise<Ballot | null>_
 
 ```typescript
-const ballot = user.createBallot({
+const ballot = await user.createBallot({
     name: "County elections",
     description: "Which hobbit do you want to vote for?",
     proposals: ["Frodo Baggins", "Samwise Gamgee", "Pippin Took", "Merry Brandybuck"],
@@ -154,7 +154,7 @@ const ballot = user.createBallot({
 <a name="elekton-ballot-vote" href="#elekton-ballot-vote">#</a> **ballot.vote**(user: _User_, vote: _number_): _Promise<void | null>_
 
 ```typescript
-ballot.vote(user, 2)
+await ballot.vote(user, 2)
 ```
 
 ## Contacts
