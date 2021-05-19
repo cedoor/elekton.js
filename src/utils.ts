@@ -75,5 +75,7 @@ export function fromBigNumberToBytes32(n: any) {
 }
 
 export function isWebSocketURL(url: string): boolean {
-    return new URL(url).protocol === "ws:"
+    const { protocol } = new URL(url)
+
+    return protocol === "ws:" || protocol === "wss:"
 }
